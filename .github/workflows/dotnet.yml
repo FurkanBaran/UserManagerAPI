@@ -25,7 +25,7 @@ jobs:
     - name: Deploy to EC2
       run: |
         ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
-          cd /var/www/myapp
+          cd /var/www/UserManagerAPI
           git pull origin main
           dotnet build
           sudo systemctl restart kestrel-usermanager.service
