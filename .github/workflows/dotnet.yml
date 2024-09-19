@@ -28,5 +28,6 @@ jobs:
           cd /var/www/UserManagerAPI
           git pull origin main
           dotnet build
+          dotnet publish -c Release -o /var/www/UserManagerAPI/publish
           sudo systemctl restart kestrel-usermanager.service
         EOF
