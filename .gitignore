@@ -1,0 +1,21 @@
+# Visual Studio artifacts
+.vs/
+*.user
+*.suo
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.rsuser
+*.sln.docstates
+
+# ASP.NET Core environment files
+appsettings.Development.json
+
+# Dependency directories
+packages/
+
+# Logs
+*.log
