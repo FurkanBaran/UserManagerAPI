@@ -73,9 +73,6 @@ jobs:
           username: ${{ secrets.AWS_EC2_USER }}
           key: "${{ secrets.AWS_EC2_SSH_KEY }}"
           script: |
-            # Servisi yeniden başlat
             sudo systemctl daemon-reload
             sudo systemctl restart kestrel-usermanagerapi.service
-
-            # Servis durumunu kontrol et
             sudo systemctl status kestrel-usermanagerapi.service --no-pager
