@@ -38,4 +38,4 @@ jobs:
           username: ${{ secrets.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           script: |
-            sudo systemctl restart kestrel-yourapp.service
+            sudo systemctl restart kestrel-usermanager.service
