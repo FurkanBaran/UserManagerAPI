@@ -1,4 +1,5 @@
-name: Deploy to AWS EC2
+
+name: Deploy .NET Core API to EC2
 
 on:
   push:
@@ -10,24 +11,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.AWS_EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Add EC2's IP to known_hosts
-      run: ssh-keyscan -H ${{ secrets.AWS_EC2_HOST }} >> ~/.ssh/known_hosts
+      - name: Publish .NET app
+        run: dotnet publish -c Release -o ./publish
 
-    - name: Deploy to EC2
-      run: |
-        ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
-          cd /var/www/UserManagerAPI
-          git pull origin main
-          dotnet build
-          dotnet publish -c Release -o /var/www/UserManagerAPI/publish
-          sudo systemctl restart kestrel-usermanager.service
-        EOF
+      - name: Copy files via SSH
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: ./publish/*
+          target: /var/www/yourapp/
+
+      - name: Restart EC2 service
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            sudo systemctl restart kestrel-yourapp.service
