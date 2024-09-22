@@ -3,7 +3,7 @@ name: Deploy on EC2 Instance
 on:
   push:
     branches:
-      - main
+      - aws
 
 jobs:
   deploy:
