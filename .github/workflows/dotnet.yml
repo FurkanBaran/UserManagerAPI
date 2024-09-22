@@ -1,4 +1,3 @@
-
 name: Deploy .NET Core API to EC2
 
 on:
@@ -8,6 +7,7 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
@@ -20,22 +20,62 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Publish .NET app
-        run: dotnet publish -c Release -o ./publish
+        run: dotnet publish -c Release -r linux-x64 --self-contained false -o ./publish
 
-      - name: Copy files via SSH
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ secrets.AWS_EC2_HOST }}
-          username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          source: ./publish/*
-          target: /var/www/yourapp/
+      - name: Configure SSH
+        run: |
+          echo "${{ secrets.AWS_EC2_SSH_KEY }}" > ssh_key
+          chmod 600 ssh_key
 
-      - name: Restart EC2 service
+      - name: Install .NET on EC2 if not installed
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.AWS_EC2_HOST }}
           username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          key: "${{ secrets.AWS_EC2_SSH_KEY }}"
           script: |
-            sudo systemctl restart kestrel-usermanager.service
+            if ! command -v dotnet &> /dev/null
+            then
+              echo ".NET Core bulunamadı, kuruluyor..."
+              wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+              sudo dpkg -i packages-microsoft-prod.deb
+              rm packages-microsoft-prod.deb
+              sudo apt-get update
+              sudo apt-get install -y apt-transport-https
+              sudo apt-get install -y dotnet-sdk-8.0
+            else
+              echo ".NET Core zaten yüklü."
+            fi
+
+      - name: Create deployment directory
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: "${{ secrets.AWS_EC2_SSH_KEY }}"
+          script: |
+            sudo mkdir -p /var/www/UserManagerAPI
+            sudo chown -R $USER:www-data /var/www/UserManagerAPI
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: "${{ secrets.AWS_EC2_SSH_KEY }}"
+          source: ./publish/*
+          target: /var/www/UserManagerAPI/
+
+      - name: Setup and Start Service on EC2
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: "${{ secrets.AWS_EC2_SSH_KEY }}"
+          script: |
+            # Servisi yeniden başlat
+            sudo systemctl daemon-reload
+            sudo systemctl restart kestrel-usermanagerapi.service
+
+            # Servis durumunu kontrol et
+            sudo systemctl status kestrel-usermanagerapi.service --no-pager
