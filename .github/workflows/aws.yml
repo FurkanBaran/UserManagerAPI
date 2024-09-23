@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted 
-    name: Build and Deploy on EC2 via SSH
+    name: Build and Deploy on EC2 via SSH 
 
     steps:
     - name: Checkout repository
