@@ -31,7 +31,7 @@ jobs:
 
     - name: Copy files to EC2 instance
       run: |
-        scp -r ./publish/* ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/var/www/UserManagerAPI/
+        scp -r ./publish/* ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/var/www/Actions/UserManagerAPI/
 
     - name: Restart application on EC2 instance
       run: |
