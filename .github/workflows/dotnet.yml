@@ -11,7 +11,7 @@ jobs:
     name: Build and Deploy on Huawei-WSL
 
     steps:
-    - name: Checkout repository
+    - name: Checkout repository 
       uses: actions/checkout@v3
 
     - name: Build .NET Application
